@@ -6,7 +6,7 @@ welcome.
 
 ```viml
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-Plug 'theprimeagen/<name>'
+Plug 'theprimeagen/jvim.nvim'
 ```
 
 ### How to use
