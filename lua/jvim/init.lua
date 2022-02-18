@@ -1,6 +1,33 @@
 local parsers = require("nvim-treesitter.parsers")
+local ts_utils = require("nvim-treesitter.ts_utils")
 
 local M = {}
+
+local function project(row, col)
+	return row * 100000 + col
+end
+
+local function project_start(node)
+	local row, col = node:range()
+	return project(row, col)
+end
+
+local function project_end(node)
+	local _, _, row, col = node:range()
+	return project(row, col)
+end
+
+local function contains(a, b)
+	if project_start(a) > project_start(b) then
+		return false
+	end
+
+	if project_end(a) < project_end(b) then
+		return false
+	end
+
+	return true
+end
 
 local function get_bufnr(bufnr)
 	return bufnr or vim.api.nvim_get_current_buf()
@@ -50,6 +77,30 @@ local function get_parent(bufnr, count)
 	return current_node
 end
 
+local function get_first_child(bufnr)
+	local current_node = get_parent(bufnr, 1)
+	local query = vim.treesitter.parse_query("json", "(pair) @pair")
+
+	local lowest = nil
+	local lowest_diff = nil
+	for _, node, _ in query:iter_captures(current_node, bufnr, 0, -1) do
+		if current_node:id() ~= node:id() and (lowest == nil or contains(current_node, lowest)) then
+			if lowest == nil then
+				lowest = node
+				lowest_diff = math.abs(project_start(current_node) - project_start(lowest))
+			else
+				local diff = math.abs(project_start(current_node) - project_start(lowest))
+				if diff < lowest_diff then
+					lowest = node
+					lowest_diff = diff
+				end
+			end
+		end
+	end
+
+	return lowest
+end
+
 local function move(node)
 	local new_row, new_col = node:range()
 	vim.api.nvim_win_set_cursor(0, { new_row + 1, new_col })
@@ -94,6 +145,16 @@ function M.prev_sibling()
 		move(prev)
 	else
 		move(pair)
+	end
+end
+
+function M.descend()
+	if not valid_buffer() then
+		return
+	end
+	local first_child = get_first_child()
+	if first_child then
+		move(first_child)
 	end
 end
 
