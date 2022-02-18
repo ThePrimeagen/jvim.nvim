@@ -1,6 +1,4 @@
 ## JSON Navigation
-Unfortunately I let twitter decide on the name of this project... You are
-welcome.
 
 ### Installation
 
