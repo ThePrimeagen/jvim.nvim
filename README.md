@@ -13,8 +13,8 @@ folder.  Here is an example of mine (I have copied and pasted it below for
 convenience):
 
 Yes I did use the arrow keys because I have them nearish the home row on my
-[Kinesis Advantage 2](bit.ly/primeagen-adv2).  I never use them, might as well
-make them useful for something!
+[Kinesis Advantage 2](https://bit.ly/primeagen-adv2).  I never use them, might
+as well make them useful for something!
 
 ```viml
 nnoremap <left> :lua require("jvim").to_parent()<CR>
