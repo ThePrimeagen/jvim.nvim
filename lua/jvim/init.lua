@@ -32,9 +32,13 @@ local function get_bufnr(bufnr)
 	return bufnr or vim.api.nvim_get_current_buf()
 end
 
+local function buf_filetype()
+	return vim.bo[get_bufnr()].ft
+end
+
 local function valid_buffer()
-	local ft = vim.bo[get_bufnr()].ft
-	return ft == "json"
+	local ft = buf_filetype()
+	return ft == "yaml" or ft == "json"
 end
 
 local function getpos()
@@ -42,14 +46,17 @@ local function getpos()
 end
 
 local function get_root(bufnr)
-	local parser = parsers.get_parser(bufnr, "json")
+	local ft = buf_filetype()
+	local parser = parsers.get_parser(bufnr, ft)
 	if not parser then
-		error("No treesitter parser found. Install one using :TSInstall <language>")
+		error("No treesitter parser found. Install one using :TSInstall " .. ft)
 	end
 	return parser:parse()[1]:root()
 end
 
 local function get_parent(bufnr, count)
+	local node_type = buf_filetype() == "json" and "pair" or "block_mapping_pair"
+
 	if not count or count < 1 then
 		count = 1
 	end
@@ -65,7 +72,7 @@ local function get_parent(bufnr, count)
 	while current_node:parent() ~= nil and current_node:parent():type() ~= "document" do
 		current_node = current_node:parent()
 
-		if current_node:type() == "pair" then
+		if current_node:type() == node_type then
 			current_count = current_count + 1
 			if current_count == count then
 				break
@@ -78,7 +85,10 @@ end
 
 local function get_first_child(bufnr)
 	local current_node = get_parent(bufnr, 1)
-	local query = vim.treesitter.parse_query("json", "(pair) @pair")
+	local ft = buf_filetype()
+	local node_type = ft == "json" and "pair" or "block_mapping_pair"
+
+	local query = vim.treesitter.parse_query(ft, "(" .. node_type .. ") @" .. node_type)
 
 	local lowest = nil
 	local lowest_diff = nil
