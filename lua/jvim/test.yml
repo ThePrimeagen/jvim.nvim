@@ -1,0 +1,8 @@
+---
+foo:
+  bar:
+    - 0
+    - 2
+    - 4
+  baz: flevity
+...
